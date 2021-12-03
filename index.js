@@ -5,8 +5,20 @@
 const puppeteer = require("puppeteer");
 const fs = require("fs");
 const path = require("path");
+const https = require("https");
+const { DownloaderHelper } = require("node-downloader-helper");
+const { v4: uuidv4 } = require('uuid');
+
+
 // import fetch from 'node-fetch';
 
+/*
+
+https://www.toptal.com/puppeteer/headless-browser-puppeteer-tutorial
+
+https://developers.google.com/web/tools/puppeteer/examples
+*/
+const puppeteerLaucnhOptions = { headless: true, userDataDir: "./data" };
 function saveImageToDisk(url, filename) {
   fetch(url)
     .then((res) => {
@@ -64,9 +76,7 @@ const getImgLnks = async (baseURL) => {
 };
 
 async function startSifoning(baseURL) {
-  const browser = await puppeteer.launch({
-    headless: true,
-  });
+  const browser = await puppeteer.launch(puppeteerLaucnhOptions);
 
   const page = await browser.newPage();
   // Get the page url from the user
@@ -97,7 +107,7 @@ async function startSifoning(baseURL) {
 }
 
 const DownloadImageInPage = async () => {
-  const browser = await puppeteer.launch();
+  const browser = await puppeteer.launch(puppeteerLaucnhOptions);
   const page = await browser.newPage();
   page.on("response", async (response) => {
     const url = response.url();
@@ -174,37 +184,86 @@ async function startSifoning00(baseURL) {
 }
 
 async function runOnGoogle() {
-    const browser = await puppeteer.launch({
-        headless: false
-    });
-    const page = await browser.newPage();
-    await page.setViewport({ width: 1200, height: 1200 });
-    await page.goto('https://www.google.com/search?q=.net+core&rlz=1C1GGRV_enUS785US785&oq=.net+core&aqs=chrome..69i57j69i60l3j69i65j69i60.999j0j7&sourceid=chrome&ie=UTF-8');
+  const browser = await puppeteer.launch(puppeteerLaucnhOptions);
+  const page = await browser.newPage();
+  await page.setViewport({ width: 1200, height: 1200 });
+  let googleSearchUrl =
+    "https://www.google.com/search?q=cat&tbm=isch&tbs=isz:m";
+  await page.goto(googleSearchUrl);
 
-    const IMAGE_SELECTOR = '#tsf > div:nth-child(2) > div > div.logo > a > img';
-    let imageHref = await page.evaluate((sel) => {
-        return document.querySelector(sel).getAttribute('src').replace('/', '');
-    }, IMAGE_SELECTOR);
+  //const IMAGE_SELECTOR = '#tsf > div:nth-child(2) > div > div.logo > a > img';
+  const IMAGE_SELECTOR = "img[data-iml]";
+  //document.querySelectorAll("img[data-iml]")
 
-    console.log("https://www.google.com/" + imageHref);
-    var viewSource = await page.goto("https://www.google.com/" + imageHref);
-    fs.writeFile(".googles-20th-birthday-us-5142672481189888-s.png", await viewSource.buffer(), function (err) {
-    if (err) {
-        return console.log(err);
+  let imageHrefs = await page.evaluate((sel) => {
+    let imgs = document.querySelectorAll(sel);
+    imgs.map = [].map;
+    return imgs.map((x) => x.getAttribute("src"));
+  }, IMAGE_SELECTOR);
+
+  console.log(imageHrefs);
+  imageHrefs.forEach((imgUrl) => {
+    if (imgUrl.indexOf("http") == 0) {
+      let imgName = imgUrl.split("/").pop();
+      const filePath = `${__dirname}/files`;
+      const dl = new DownloaderHelper(imgUrl, filePath);
+      dl.on("end", () => console.log("Download Completed"));
+      dl.start();
+    
+    } else {
+      if (imgUrl.indexOf("data:image/") == 0) {
+        let base64Data = imgUrl.substring("data:image/".length);
+        let p0=base64Data.indexOf(";");
+        let fileExtension=base64Data.substring(0,p0);
+        let p1=base64Data.indexOf(";base64,");
+        base64Data=base64Data.substring(p1+";base64,".length);
+        let buff = Buffer.from(base64Data, 'base64');
+        let imgName ="image_"+uuidv4()+"."+fileExtension;
+        fs.writeFile("./files/"+imgName, buff, (err) => {
+          if (err) return console.error(err)
+          console.log('file saved to ', imgName)
+        })
+      }
     }
+  });
 
-    console.log("The file was saved!");
-});
-
-    browser.close();
+  browser.close();
 }
+
+function download(uri, filename) {
+  return new Promise((resolve, reject) => {});
+}
+
+//  This is main download function which takes the url of your image
+function download00(uri, filename) {
+  return new Promise((resolve, reject) => {
+    request.head(uri, function (err, res, body) {
+      request(uri).pipe(fs.createWriteStream(filename)).on("close", resolve);
+    });
+  });
+}
+
+let main = async () => {
+  const browser = await puppeteer.launch(puppeteerLaucnhOptions);
+  const page = await browser.newPage();
+  await page.goto("https://memeculture69.tumblr.com/");
+  // await page.waitFor(1000);
+  const imageUrl = await page.evaluate(
+    // here we got the image url from the selector.
+    () => document.querySelector("img.image")
+  );
+  // Now just simply pass the image url
+  // to the downloader function to download  the image.
+  await download(imageUrl, "image.png");
+};
 
 // Run the script on auto-pilot
 (async function () {
-  await DownloadImageInPage();
+  // await DownloadImageInPage();
 
   await runOnGoogle();
-  
+  await main();
+
   let url = "https://stocksnap.io";
 
   await startSifoning(url);
