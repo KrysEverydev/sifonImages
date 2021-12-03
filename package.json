@@ -1,16 +1,23 @@
 {
-  "name": "sifonImages",
+  "name": "sifonimages",
   "version": "1.0.0",
-  "description": "",
+  "description": "Pupetter application to gather image from the web",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js",
+    "debug": "node index.js",
+    "dev": "node --trace-warnings index.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "compress-images": "^2.0.4",
     "node-fetch": "^3.0.0",
-    "puppeteer": "^10.4.0"
+    "puppeteer": "12.0.1",
+    "trim-newlines": "^4.0.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.15"
   }
 }
