@@ -183,12 +183,18 @@ async function startSifoning00(baseURL) {
   }
 }
 
-async function runOnGoogle() {
+async function runOnVectorstock(){
+//https://www.vectorstock.com/royalty-free-vector/space-glyph-signed-icon-set-astronomy-symbols-vector-23767865
+/**
+ * https://www.vectorstock.com/royalty-free-vector/internal-organs-flat-linear-long-shadow-icons-set-vector-28811088
+ */
+}
+
+async function runOnGoogle(q="Cat") {
   const browser = await puppeteer.launch(puppeteerLaucnhOptions);
   const page = await browser.newPage();
   await page.setViewport({ width: 1200, height: 1200 });
-  let googleSearchUrl =
-    "https://www.google.com/search?q=cat&tbm=isch&tbs=isz:m";
+  let googleSearchUrl ='https://www.google.com/search?q=${q}&tbm=isch&tbs=isz:m'.replace('{q}',q);
   await page.goto(googleSearchUrl);
 
   //const IMAGE_SELECTOR = '#tsf > div:nth-child(2) > div > div.logo > a > img';
@@ -230,6 +236,31 @@ async function runOnGoogle() {
   browser.close();
 }
 
+async function runOnGoGoAnime(){
+
+  [2014,2015,2016,2017,2018,2019,2020,2021].forEach(y=>{
+    ['winter','spring','summer','fall'].forEach(a=> { 
+  let pn=1; // page number
+  let uri='https://gogoanime.wiki/sub-category/'+a+'-'+y+'-anime?page='+pn;
+
+
+    });
+
+  });
+
+  
+  let uri='https://gogoanime.wiki/sub-category/winter-2021-anime?page=4';
+  /*
+  Content of Season block
+  .menu_series > ul > li > a
+let lnks= document.querySelectorAll('.menu_series > ul > li > a');
+  https://gogoanime.wiki/sub-category/summer-2019-anime?page=1
+  https://gogoanime.wiki/sub-category/summer-2018-anime?page=1
+  https://gogoanime.wiki/sub-category/summer-2017-anime?page=1
+  https://gogoanime.wiki/sub-category/winter-2017-anime?page=1
+  */
+}
+
 function download(uri, filename) {
   return new Promise((resolve, reject) => {});
 }
@@ -260,8 +291,16 @@ let main = async () => {
 // Run the script on auto-pilot
 (async function () {
   // await DownloadImageInPage();
+  // get data for the search from the image categories:
+  // D:\igaDevs\PICOTI\_data\img_categories.json
+  let imgCat= fs.readFileSync("D:\igaDevs\PICOTI\_data\img_categories.json");
 
-  await runOnGoogle();
+const searchKeys=["cat","etoiles","galaxy","nebuleuse",'mobilephone','film cover','manga','anime','wild life','mushrooms','dogs','yugi oh cards'];
+
+searchKeys.forEach( kw=> await runOnGoogle(kw) );
+
+// await runOnGoogle();
+  // await runOnGoogle();
   await main();
 
   let url = "https://stocksnap.io";
